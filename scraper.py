@@ -32,7 +32,7 @@ def validateURL(url):
        # r = requests.get(url, allow_redirects=True, timeout=90, verify = False)
         r = urllib2.urlopen(url)
         count = 1
-        while r.status_code == 500 and count < 4:
+        while r.getcode() == 500 and count < 4:
             print ("Attempt {0} - Status code: {1}. Retrying.".format(count, r.status_code))
             count += 1
            # r = requests.get(url, allow_redirects=True, timeout=90)
