@@ -29,7 +29,7 @@ def validateFilename(filename):
         return True
 def validateURL(url):
     try:
-        r = requests.get(url, allow_redirects=True, timeout=30)
+        r = requests.get(url, allow_redirects=True, timeout=60, verify = False)
         count = 1
         while r.status_code == 500 and count < 4:
             print ("Attempt {0} - Status code: {1}. Retrying.".format(count, r.status_code))
@@ -60,7 +60,6 @@ html = urllib2.urlopen(url)
 soup = BeautifulSoup(html)
 # find all entries with the required class
 block = soup.find('div', attrs = {'class':'servicePage'}).ul
-#print block
 links = block.findAll('li')
 for link in links:
     try:
