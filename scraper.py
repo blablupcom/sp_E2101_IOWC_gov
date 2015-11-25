@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 
 #### IMPORTS 1.0
@@ -9,8 +8,7 @@ import scraperwiki
 import urllib2
 from datetime import datetime
 from bs4 import BeautifulSoup
-import requests
-from dateutil.parser import parse
+
 
 #### FUNCTIONS 1.0
 
@@ -45,7 +43,6 @@ def validateURL(url):
         while r.getcode() == 500 and count < 4:
             print ("Attempt {0} - Status code: {1}. Retrying.".format(count, r.status_code))
             count += 1
-           # r = requests.get(url, allow_redirects=True, timeout=90)
             r = urllib2.urlopen(url)
         sourceFilename = r.headers.get('Content-Disposition')
 
@@ -100,20 +97,47 @@ soup = BeautifulSoup(html, 'lxml')
 
 #### SCRAPE DATA
 
-block = soup.find('div', attrs = {'class':'servicePage'}).ul
-links = block.findAll('li')
+block = soup.find('div', attrs = {'class':'servicePagesTab'}).ul
+links = block.findAll('li')[:2]
 for link in links:
-    try:
-       url = link.a.find_next('a')['href']
-       url = 'download'.join(url.split('view'))
-    except: pass
-    try:
-        csvfile = link.find('strong').text
-    except: pass
-    csvMth = csvfile.split(' ')[0][0:3].strip()
-    csvYr = csvfile.split(' ')[1].strip()
-    csvMth = convert_mth_strings(csvMth.upper())
-    data.append([csvYr, csvMth, url])
+    url_link = link.find('a')['href']
+    html = urllib2.urlopen('https://www.iwight.com'+url_link)
+    soup = BeautifulSoup(html, 'lxml')
+    block = soup.find('div', attrs = {'class':'servicePage'})
+    links = block.findAll('li')
+    for link in links:
+        url = ''
+        try:
+           url = link.a.find_next('a')['href']
+           url = 'download'.join(url.split('view'))
+        except: pass
+        csvfile = ''
+        try:
+            csvfile = link.find('strong').text
+        except:
+                pass
+        if url and csvfile:
+            csvMth = csvfile.split(' ')[0][0:3].strip()
+            try:
+                csvYr = csvfile.split(' ')[1].strip()
+            except:
+                try:
+                    csvYr = link.find('strong').find_next('strong').split(' ')[1].strip()
+                except: pass
+            if 'Quarter 4' in csvfile:
+                csvMth = 'Q4'
+                csvYr = csvfile[-4:]
+            if 'Quarter 3' in csvfile:
+                csvMth = 'Q3'
+                csvYr = csvfile[-4:]
+            if 'Quarter 2' in csvfile:
+                csvMth = 'Q2'
+                csvYr = csvfile[-4:]
+            if 'Quarter 1' in csvfile:
+                csvMth = 'Q1'
+                csvYr = csvfile[-4:]
+            csvMth = convert_mth_strings(csvMth.upper())
+            data.append([csvYr, csvMth, url])
 
 
 #### STORE DATA 1.0
